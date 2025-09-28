@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netflix Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #141414;
+      color: white;
+      overflow-x: hidden; /* Added to prevent horizontal scroll from number overflow */
+    }
+
+    header {
+      background-color: transparent;
+      padding: 20px 50px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.4s ease;
+    }
+
+    header.scrolled {
+      background-color: #141414;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+    }
+
+    .logo {
+      color: #E50914;
+      text-decoration: none;
+    }
+
+    .logo img {
+      height: 35px;
+      width: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      color: #e5e5e5;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #b3b3b3;
+    }
+
+    .nav-links a.active {
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .profile-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .profile-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero {
+      height: 85vh;
+      background-image: url('https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg');
+      background-size: cover;
+      background-position: center top;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 50px;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(20, 20, 20, 0.8) 0%, transparent 20%, transparent 80%, rgba(20, 20, 20, 1) 100%);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 500px;
+      margin-top: 100px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin-bottom: 20px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background-color: white;
+      color: black;
+    }
+
+    .btn-secondary {
+      background-color: rgba(109, 109, 110, 0.7);
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .content-rows {
+      padding: 20px 0;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin: 30px 0 20px 50px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title.trending::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background-color: #E50914;
+      margin-right: 10px;
+    }
+
+    .row {
+      margin-bottom: 40px;
+      position: relative;
+      padding-left: 50px;
+      padding-right: 50px;
+    }
+
+    .row-content {
+      display: flex;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding: 20px 0;
+      gap: 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .row-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      min-width: 200px;
+      flex-shrink: 0;
+      background: #181818;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.3s ease;
+    }
+
+    .card:hover::after {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .thumbnail {
+      width: 100%;
+      height: 300px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .progress-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px;
+      font-size: 0.8rem;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 3;
+    }
+
+    .card:hover .progress-info {
+      opacity: 1;
+    }
+
+    .progress-bar-container {
+      flex-grow: 1;
+      background-color: #404040;
+      height: 4px;
+      margin-right: 10px;
+    }
+
+    .progress-bar {
+      background-color: #E50914;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      white-space: nowrap;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    .hover-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 20%, #141414 100%);
+      padding: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .card:hover .hover-content,
+    .top10-card:hover .hover-content { /* ADDED: .top10-card:hover selector */
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .hover-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .hover-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background-color: rgba(42, 42, 42, 0.6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .hover-button.play {
+      background-color: white;
+      color: black;
+    }
+
+    .hover-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .hover-button.play:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .card-description {
+      font-size: 0.8rem;
+      color: #d2d2d2;
+      margin-bottom: 10px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .metadata {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+
+    .match {
+      color: #46d369;
+      font-weight: bold;
+    }
+
+    .rating {
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 1px 4px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+
+    .tag:not(:last-child):after {
+      content: "•";
+      margin-left: 8px;
+      color: #646464;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: white;
+      font-size: 2rem;
+      padding: 10px 15px;
+      cursor: pointer;
+      z-index: 10;
+      display: none;
+    }
+
+    .row:hover .arrow {
+      display: block;
+    }
+
+    .arrow.left {
+      left: 0;
+    }
+
+    .arrow.right {
+      right: 0;
+    }
+
+    .new-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #E50914;
+      color: white;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 50px;
+      background: #141414;
+      color: #737373;
+      border-top: 1px solid #333;
+    }
+
+    .top10-header {
+      display: flex;
+      align-items: center;
+      margin: 30px 0 20px 50px;
+    }
+
+    .top10-red-bar {
+      width: 4px;
+      height: 32px;
+      background-color: #E50914;
+      margin-right: 10px;
+    }
+
+    .top10-header h2 {
+      font-size: 1.5rem;
+    }
+
+.top10-row {
+  height: 300px;
+}
+
+.top10-row .row-content {
+  counter-reset: top10-counter;
+  padding-left: 100px;
+  padding-right: 50px;
+  gap: 160px;
+  overflow-x: auto;
+  align-items: center;
+  height: 100%;
+  margin-left: 50px;
+}
+
+.top10-card {
+  min-width: 180px;
+  height: 250px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1;
+}
+
+.top10-card::before {
+  counter-increment: top10-counter;
+  content: counter(top10-counter);
+  position: absolute;
+  bottom: -20px;
+  left: -120px;
+  font-size: 12rem;
+  font-weight: 800;
+  color: transparent;
+  -webkit-text-stroke: 4px white;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateX(30px);
+}
+
+    .top10-badge {
+      position: absolute;
+      top: 8px;
+      left: -4px;
+      background-color: #E50914;
+      color: white;
+      padding: 5px 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+      transform: skewX(-10deg);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-left">
+      <a href="#" class="logo">
+        <img src="https://pngdownload.io/wp-content/uploads/2025/06/Netflix-Logo-Streaming-Platform-PNG.webp" alt="Netflix Logo">
+      </a>
+      <nav class="nav-links">
+        <a href="#" class="active">Home</a>
+        <a href="#">TV Shows</a>
+        <a href="#">Movies</a>
+        <a href="#">New & Popular</a>
+        <a href="#">My List</a>
+      </nav>
+    </div>
+    <div class="header-right">
+      <div class="profile-icon">
+        <img src="https://i.pinimg.com/originals/b6/77/cd/b677cd1cde292f261166533d6fe75872.png" alt="Profile">
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Stranger Things</h1>
+        <p>When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying
+          supernatural forces and one strange little girl.</p>
+        <div class="hero-buttons">
+          <button class="btn btn-primary">▶ Play</button>
+          <button class="btn btn-secondary">ℹ More Info</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="content-rows">
+      <h2 class="section-title">Continue Watching</h2>
+      <div class="row">
+        <button class="arrow left">
+                  <button class="arrow left">‹</button>
+        <div class="row-content">
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://image.tmdb.org/t/p/w500/56v2KjBlU4XaOv9rVYEQypROD7P.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 50%;"></div>
+              </div><span class="progress-text">50% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Stranger Things</h3>
+              <p class="card-description">A young boy's disappearance uncovers a mystery involving secret experiments
+                and supernatural forces.</p>
+              <div class="metadata">
+                  <span class="match">98% Match</span>
+                  <span class="rating">TV-14</span>
+                  <span class="duration">4 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Supernatural</span>
+                  <span class="tag">Horror</span>
+                  <span class="tag">Drama</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 25%;"></div>
+              </div><span class="progress-text">25% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Breaking Bad</h3>
+              <p class="card-description">A chemistry teacher with cancer turns to cooking meth to secure his family's
+                future.</p>
+              <div class="metadata">
+                  <span class="match">99% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">5 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Crime Drama</span>
+                  <span class="tag">Thriller</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 90%;"></div>
+              </div><span class="progress-text">90% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Peaky Blinders</h3>
+              <p class="card-description">A gangster family epic set in 1900s England, centering on a gang who sew razor
+                blades in their caps.</p>
+               <div class="metadata">
+                  <span class="match">96% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">6 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Crime Drama</span>
+                  <span class="tag">Period Piece</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/1DDE0Z2Y805rqfkEjPbZsMLyPwa.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 70%;"></div>
+              </div><span class="progress-text">70% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Crown</h3>
+              <p class="card-description">Follows the political rivalries and romance of Queen Elizabeth II's reign.</p>
+              <div class="metadata">
+                  <span class="match">97% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">6 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Drama</span>
+                  <span class="tag">History</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/cZ0d3rtvXPVvuiX22sP79K3Hmjz.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 40%;"></div>
+              </div><span class="progress-text">40% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Witcher</h3>
+              <p class="card-description">Geralt of Rivia, a monster hunter, struggles to find his place in a wicked
+                world.</p>
+              <div class="metadata">
+                  <span class="match">94% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">3 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Fantasy</span>
+                  <span class="tag">Action</span>
+                  <span class="tag">Adventure</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 80%;"></div>
+              </div><span class="progress-text">80% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Money Heist</h3>
+              <p class="card-description">An unusual group of robbers attempt to carry out the most perfect robbery in
+                Spanish history.</p>
+              <div class="metadata">
+                  <span class="match">95% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">5 Parts</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Crime</span>
+                  <span class="tag">Thriller</span>
+                  <span class="tag">Heist</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/m73bD8VjibSKuTWg597GQVyVhSb.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 65%;"></div>
+              </div><span class="progress-text">65% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Ozark</h3>
+              <p class="card-description">A financial advisor drags his family from Chicago to the Missouri Ozarks,
+                where he must launder money.</p>
+              <div class="metadata">
+                  <span class="match">96% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">4 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Crime Drama</span>
+                  <span class="tag">Thriller</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/rTmal9fDbwh5F0waol2hq35U4ah.jpg');"></div>
+            <div class="progress-info">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: 33%;"></div>
+              </div><span class="progress-text">33% watched</span>
+            </div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Narcos</h3>
+              <p class="card-description">A chronicled look at the criminal exploits of Colombian drug lord Pablo
+                Escobar.</p>
+              <div class="metadata">
+                  <span class="match">97% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">3 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Crime Drama</span>
+                  <span class="tag">Biographical</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="arrow right">›</button>
+      </div>
+
+      <h2 class="section-title trending">Trending Now</h2>
+      <div class="row">
+        <button class="arrow left">‹</button>
+        <div class="row-content">
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/sUsVimPdA1l162FvdBIlmKBlWHx.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Demon Slayer</h3>
+              <p class="card-description">A young man becomes a demon slayer after his family is slaughtered and his
+                sister is turned into a demon.</p>
+              <div class="metadata">
+                  <span class="match">98% Match</span>
+                  <span class="rating">TV-14</span>
+                  <span class="duration">3 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Anime</span>
+                  <span class="tag">Action</span>
+                  <span class="tag">Fantasy</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/1QdXdRYfktUSONkl1oD5gc6Be0s.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Squid Game</h3>
+              <p class="card-description">Hundreds of cash-strapped contestants accept an invitation to compete in
+                children's games for a tempting prize, but the stakes are deadly.</p>
+              <div class="metadata">
+                  <span class="match">95% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">1 Season</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Thriller</span>
+                  <span class="tag">Drama</span>
+                  <span class="tag">Survival</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Wednesday</h3>
+              <p class="card-description">Wednesday Addams investigates a murder spree while making new friends and foes
+                at Nevermore Academy.</p>
+              <div class="metadata">
+                  <span class="match">92% Match</span>
+                  <span class="rating">TV-14</span>
+                  <span class="duration">1 Season</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Comedy</span>
+                  <span class="tag">Supernatural</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/vDGr1YdrlfbU9wxTOdpf3zChmv9.jpg');
+                            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/vDGr1YdrlfbU9wxTOdpf3zChmv9.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Glass Onion</h3>
+              <p class="card-description">Famed Southern detective Benoit Blanc travels to Greece for his latest case.
+              </p>
+              <div class="metadata">
+                  <span class="match">91% Match</span>
+                  <span class="rating">PG-13</span>
+                  <span class="duration">2h 19m</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Mystery</span>
+                  <span class="tag">Comedy</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/zU0htwkhNvBQdVSIKB9s6hgVeFK.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Queen's Gambit</h3>
+              <p class="card-description">In a 1950s orphanage, a young girl reveals an astonishing talent for chess and
+                begins an unlikely journey to stardom.</p>
+              <div class="metadata">
+                  <span class="match">98% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">Limited Series</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Drama</span>
+                  <span class="tag">Period Piece</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/zCEm0xrRMa5fLCQ9d0nvcw6tvcr.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Bridgerton</h3>
+              <p class="card-description">Wealth, lust, and betrayal set in the backdrop of Regency era England, seen
+                through the eyes of the powerful Bridgerton family.</p>
+              <div class="metadata">
+                  <span class="match">93% Match</span>
+                  <span class="rating">TV-MA</span>
+                  <span class="duration">3 Seasons</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Romance</span>
+                  <span class="tag">Drama</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/lAXONuqg41NwUMuzMiFvicDET9Y.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Red Notice</h3>
+              <p class="card-description">An FBI profiler pursuing the world's most wanted art thief becomes his
+                reluctant partner in crime.</p>
+              <div class="metadata">
+                  <span class="match">88% Match</span>
+                  <span class="rating">PG-13</span>
+                  <span class="duration">1h 58m</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Action</span>
+                  <span class="tag">Comedy</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="thumbnail"
+              style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/8cXbitsS6dWQ5gfMTZdorpAAzEH.jpg');"></div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button
+                  class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Gray Man</h3>
+              <p class="card-description">When a shadowy CIA agent uncovers damning agency secrets, he's hunted across
+                the globe by a sociopathic rogue operative.</p>
+              <div class="metadata">
+                  <span class="match">89% Match</span>
+                  <span class="rating">PG-13</span>
+                  <span class="duration">2h 9m</span>
+              </div>
+              <div class="tags">
+                  <span class="tag">Action</span>
+                  <span class="tag">Thriller</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="arrow right">›</button>
+      </div>
+
+      <!-- TOP 10 ROW - MODIFIED TO ADD HOVER EFFECTS -->
+      <div class="top10-header">
+        <div class="top10-red-bar"></div>
+        <h2>TOP 10 SERIES IN NETFLIX TODAY</h2>
+      </div>
+      <div class="row top10-row">
+        <div class="row-content">
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg');">
+            <div class="top10-badge">Recently Added</div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Arcane</h3>
+              <div class="metadata"><span class="match">99% Match</span><span class="rating">TV-14</span></div>
+              <div class="tags"><span class="tag">Animation</span><span class="tag">Action</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/rgMfhcrVZjuy5b7Pn0KzCRCEnMX.jpg');">
+            <div class="top10-badge">Recently Added</div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Sweet Tooth</h3>
+              <div class="metadata"><span class="match">94% Match</span><span class="rating">TV-14</span></div>
+              <div class="tags"><span class="tag">Fantasy</span><span class="tag">Sci-Fi</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/6POBWybSBDBKjSs1VAQcnQC1qyt.jpg');">
+            <div class="top10-badge">Recently Added</div>
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Cobra Kai</h3>
+              <div class="metadata"><span class="match">96% Match</span><span class="rating">TV-14</span></div>
+              <div class="tags"><span class="tag">Action</span><span class="tag">Comedy</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/ekZobS8isE6mA53RAiGDG93hBxL.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Lucifer</h3>
+              <div class="metadata"><span class="match">95% Match</span><span class="rating">TV-14</span></div>
+              <div class="tags"><span class="tag">Supernatural</span><span class="tag">Crime</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/q54qEgagGOYCq5D1903eBVMNkbo.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Sandman</h3>
+              <div class="metadata"><span class="match">93% Match</span><span class="rating">TV-MA</span></div>
+              <div class="tags"><span class="tag">Fantasy</span><span class="tag">Drama</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Stranger Things</h3>
+              <div class="metadata"><span class="match">98% Match</span><span class="rating">TV-14</span></div>
+              <div class="tags"><span class="tag">Horror</span><span class="tag">Sci-Fi</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Money Heist</h3>
+              <div class="metadata"><span class="match">95% Match</span><span class="rating">TV-MA</span></div>
+              <div class="tags"><span class="tag">Crime</span><span class="tag">Heist</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Peaky Blinders</h3>
+              <div class="metadata"><span class="match">96% Match</span><span class="rating">TV-MA</span></div>
+              <div class="tags"><span class="tag">Crime</span><span class="tag">Period Piece</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/cZ0d3rtvXPVvuiX22sP79K3Hmjz.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">The Witcher</h3>
+              <div class="metadata"><span class="match">94% Match</span><span class="rating">TV-MA</span></div>
+              <div class="tags"><span class="tag">Fantasy</span><span class="tag">Action</span></div>
+            </div>
+          </div>
+          <div class="top10-card"
+            style="background-image: url('https://media.themoviedb.org/t/p/w188_and_h282_bestv2/m73bD8VjibSKuTWg597GQVyVhSb.jpg');">
+            <div class="hover-content">
+              <div class="hover-buttons"><button class="hover-button play">▶</button><button class="hover-button">+</button><button class="hover-button">👍</button></div>
+              <h3 class="card-title">Ozark</h3>
+              <div class="metadata"><span class="match">96% Match</span><span class="rating">TV-MA</span></div>
+              <div class="tags"><span class="tag">Crime Drama</span><span class="tag">Thriller</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Netflix Clone. All rights reserved.</p>
+  </footer>
+
+</body>
+
+</html>
